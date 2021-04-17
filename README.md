@@ -13,7 +13,7 @@ L t - Load a tree, t is the order of the tree. In the next line there is a tree 
                                         ( 1 2 ) ( 4 ) ( 6 7 )   ( 9 ) ( 11 )
 S   - Save the tree in the format described above.
 R x - Remove an element x from the tree. The element may be present or not. Hence the operation might not change the elements in the tree, but may force reorganization.
-#   - Ignore the line.
+'#'  - Ignore the line.
 X   - End the program.
 C x q1, q2, ... - Calculate an impact of a hypothetical cache. I.e. assume that you are given a set of quarries q1, ..., qn (the list of quarries ends by a new line character). 
 The program can store the result of the quarry in a cache of size x. 
