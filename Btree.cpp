@@ -1,237 +1,118 @@
-#include <iostream>
-using namespace std;
-//algorithms implentation is based on Cormen Itruduction to Algorithms Third Edition
-int order;
-#define MIN_DEGREE 2
-#define MIN_ORDER MIN_DEGREE
+#include "Btree.h"
 
-#define MIN_NUM_OF_KEYS_IN_ROOT 1
-#define MIN_NUM_OF_CHILDS_IN_ROOT 2
-
-#define MIN_NUM_OF_KEYS (order-1)
-#define MIN_NUM_OF_CHILDS order
-
-#define MAX_NUM_OF_KEYS (2 * order - 1)
-#define MAX_NUM_OF_CHILDS (2*order)
+char input[MAX_INPUT_LENGTH];
 
 
-
-struct node {
-    int n = 0; 
-    bool leaf = true;
-    int* key = new int[MAX_NUM_OF_KEYS];
-    node** child = new node *[MAX_NUM_OF_CHILDS];
-
-};
+FILE* fptr;
 
 
-class Btree {
-private:
-    node* root;
-    int height = 0;
+int get_value_from_char(char znak[MAX_INPUT_LENGTH], int poczatek);
 
-public:
-    node* getRoot() {return root;}
-    Btree() {
-        root = new node;
-    }
 
-    bool Search(node* curr, int value) {
-        int i = 1;
-
-        while (i <= curr->n && value > curr->key[i])
-            i++;
-
-        if (i <= curr->n && value == curr->key[i]) {
-            cout << "Success: " << value << " was found!\n";
-            return true;
-        }
-
-        else if (curr->leaf == true) {
-            cout << "Failure: " << value << " was NOT found!\n";
-            return false;
-        }
-
-        else
-            return Search(curr->child[i], value);
-    }
-  
-    void splitChild(node* parent, int i) {
-        node *z = new node;
-        node* y = parent->child[i];
-        z->leaf = y->leaf;
-        z->n = order - 1;
-
-        for (int j = 1; j <= z->n; j++) //najwieksze klucze ida do Z
-            z->key[j] = y->key[j + order];
-        
-        if (y->leaf == false) 
-            for (int j = 1; j <= order; j++) //jesli Y ma dzieci, przepisz je do Z
-                z->child[j] = y->child[j + order];
-            
-        y->n = order - 1; //polowa maksymalnej ilosci kluczy
-
-        for (int j = parent->n + 1; j >= i + 1; j--) //robienie miejsce dla srodkowego klucza z Y
-            parent->child[j + 1] = parent->child[j];
-
-        parent->child[i + 1] = z;//prawym dzieckiem srodkowego klucza z Y jest Z
-
-        for (int j = parent->n; j >= i; j--) //robienie miejsce dla srodkowego klucza z Y
-            parent->key[j + 1] = parent->key[j];
-
-        parent->key[i] = y->key[order]; // srodkowy klucz z Y idzie do Parent
-        parent->n += 1; //ilosc kluczy w Parent sie zwiekszyla
-
-        cout << endl;
-        for (int k = 1; k <= y->n; k++)
-            cout << "Y " << y->key[k] << " ";
-        cout << endl;
-
-        for (int k = 1; k <= parent->n; k++)
-            cout << "parent " << parent->key[k] << " ";
-        cout << endl;
-
-        for (int k = 1; k <= z->n; k++)
-            cout << "Z " << z->key[k] << " ";
-        cout << endl;
-
-        cout << parent->leaf << endl;
-
-    }
-
-    void insert(int value) {
-        if (root->n == MAX_NUM_OF_KEYS) {
-            //cout << root->leaf;
-            node* s = new node;
-           
-            s->leaf = false;
-            s->child[1] = root;
-            //cout << root->leaf;
-            splitChild(s, 1);
-            insertNonFull(s, value);
-            root = s;
-        }
-        else
-            insertNonFull(root,value);
-    }
-
-    void insertNonFull(node* curr, int value) {
-        int i = curr->n;
-        if (curr->leaf == true) {
-            while (i >= 1 && value < curr->key[i]) {
-                curr->key[i + 1] = curr->key[i];
-                i--;
-            }
-            curr->key[i + 1] = value;
-            curr->n++;
-
-           /* cout << "node: ";
-            for (int i = 1; i <= curr->n; i++)
-               cout << curr->key[i] << " ";
-            cout << endl;
-            */
-        }
-        else {
-            while (i >= 1 && value < curr->key[i])
-                i--;
-            i++;
-            if (curr->child[i]->n == MAX_NUM_OF_KEYS) {
-                splitChild(curr, i);
-                if (value > curr->key[i])
-                    i++;
-            }
-            insertNonFull(curr->child[i], value);
-        }
-    }
-    void insertNonFullRec(node* curr, int value) //not sure if it works
-    {
-        int i = curr->n;
-        while (curr->leaf == false) {
-            while (i >= 1 && value < curr->key[i])
-                i--;
-            i++;
-            if (curr->child[i]->n == MAX_NUM_OF_KEYS) {
-                splitChild(curr, i);
-                if (value > curr->key[i])
-                    i++;
-            }
-            insertNonFull(curr->child[i], value);
-        }
-
-        while (i >= 1 && value < curr->key[i]) {
-            curr->key[i + 1] = curr->key[i];
-            i--;
-        }
-        curr->key[i + 1] = value;
-        curr->n += 1;
-        
-    }
-
-    void InOrderPrint(node* curr) {
-        cout << "(";
-        int i;
-        for (i = 1; i <= curr->n; i++)
-        {
-            // If this is not leaf, then before printing key[i],
-            // traverse the subtree rooted with child C[i].
-            if (curr->leaf == false) {
-                InOrderPrint(curr->child[i]);
-            }
-            cout << " " << curr->key[i];
-        }
-        cout << ")";
-
-        if (curr->leaf == false) {
-            InOrderPrint(curr->child[i]);
-        }
-        
-        /*
-        int i = 1;
-        // cout << "( ";
-        for (; i <= curr->n; i++) {
-            if(curr->leaf == false)
-                InOrderPrint(curr->child[i]);
-            cout << curr->key[i] << " ";
-        }
-        // cout << ") ";
-        
-        if(curr->leaf == false)
-            InOrderPrint(curr->child[i]);
-        */
-    }
-
-};
-
-void insertandprint(int value, Btree* b) {
-    b->insert(value);
-    b->InOrderPrint(b->getRoot());
-    cout << endl;
-}
 int main() {
-    order = 3;
-    Btree b;
+	fptr = fopen("test1.txt", "r");
+	if (fptr == NULL) {
+		cout << "ERROR opening file";
+		return 0;
+	}
 
-    insertandprint(1,&b);
-    insertandprint(2, &b);
-    insertandprint(3, &b);
-    insertandprint(4, &b);
-    insertandprint(5, &b);
-    insertandprint(6, &b);
+	while (fgets(input, MAX_INPUT_LENGTH, fptr) != NULL) {
 
-    return 0;
+		int com_index = 0;
+
+		if (get_command(&com_index)) {
+			int value = get_value(com_index);
+			do_command(com_index, value);
+		}
+		else
+			printf("  Incorrect input\n");
+
+	}
+	fclose(fptr);
+	return 0;
+}
+
+int get_value_from_char(char znak[MAX_INPUT_LENGTH], int poczatek)
+{
+	int result = 0, i = 0;
+	while (znak[poczatek + i] >= 48 && znak[poczatek + i] <= 57)
+	{
+		result = result * 10 + (znak[poczatek + i] - 48);
+		i++;
+	}
+	return result;
+}
+bool get_command(int* com_index) {
+	char commands[COM_COUNT][COM_LENGTH]{
+	"I\n",
+	"A\n",
+	"?\n" ,
+	"P\n" ,
+	"LOAD\n" ,
+	"SAVE\n",
+	"REMOVE\n",
+	"/\n",
+	"X\n",
+	"CACHE\n",
+
+	};
+	for (int j = 0; j < COM_COUNT; j++) {
+		if (strcmp(input, commands[j]) == 0) {
+			*com_index = j;
+			return true;
+		}
+	}
+	return false;
+}
+
+void do_command(int com_index, int value) {
+
+	switch (com_index) {
+	case CONSTRUCT:
+		cout << endl;
+		order = value;
+		tree.constr();
+		break;
+	case ADD:
+		cout << endl;
+		tree.insert(value);
+		break;
+	case SEARCH:
+		tree.search(tree.getRoot(), value);
+		break;
+	case PRINT:
+		
+		tree.InOrderPrint(tree.getRoot());
+		break;
+	case LOAD:
+		order = value;
+		tree.load();
+		break;
+	case SAVE:
+		tree.save();
+	case REMOVE:
+		tree.remove(value);
+		break;
+	case IGNORE:
+		//cout << endl;
+		break;
+	case END:
+		exit(1);
+		break;
+	case CACHE:
+		tree.cache();
+		break;
+	}
 }
 
 
-void test1(Btree *b) {
-    // order = 2
-    insertandprint(2, b);
-    insertandprint(4, b);
-    insertandprint(5, b);
-    insertandprint(1, b);
-    insertandprint(10, b);
+int get_value(int com_index) {
+	int result = 0;
+	if (com_index == CONSTRUCT || com_index == ADD || com_index == SEARCH || com_index == REMOVE || com_index == LOAD)
+		if (fgets(input, MAX_INPUT_LENGTH, fptr) != NULL)
+			result = get_value_from_char(input, 0);
 
-
-    b->Search(b->getRoot(), 2);
-    b->Search(b->getRoot(), 3);
+	return result;
 }
+
 
