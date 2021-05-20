@@ -10,7 +10,7 @@ int get_value_from_char(char znak[MAX_INPUT_LENGTH], int poczatek);
 
 
 int main() {
-	fptr = fopen("test1.txt", "r");
+	fptr = fopen("test8.txt", "r");
 	if (fptr == NULL) {
 		cout << "ERROR opening file";
 		return 0;
@@ -32,23 +32,14 @@ int main() {
 	return 0;
 }
 
-int get_value_from_char(char znak[MAX_INPUT_LENGTH], int poczatek)
-{
-	int result = 0, i = 0;
-	while (znak[poczatek + i] >= 48 && znak[poczatek + i] <= 57)
-	{
-		result = result * 10 + (znak[poczatek + i] - 48);
-		i++;
-	}
-	return result;
-}
+
 bool get_command(int* com_index) {
 	char commands[COM_COUNT][COM_LENGTH]{
 	"I\n",
 	"A\n",
 	"?\n" ,
 	"P\n" ,
-	"LOAD\n" ,
+	"L\n" ,
 	"SAVE\n",
 	"REMOVE\n",
 	"/\n",
@@ -81,15 +72,16 @@ void do_command(int com_index, int value) {
 		tree.search(tree.getRoot(), value);
 		break;
 	case PRINT:
-		
-		tree.InOrderPrint(tree.getRoot());
+		cout << "print: ";
+		tree.print(tree.getRoot());
 		break;
 	case LOAD:
 		order = value;
-		tree.load();
+		tree.load( fptr);
+		
 		break;
 	case SAVE:
-		tree.save();
+		tree.save(tree.getRoot());
 	case REMOVE:
 		tree.remove(value);
 		break;

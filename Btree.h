@@ -2,7 +2,9 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <string>
 using namespace std;
 //algorithms implentation is based on Cormen Itruduction to Algorithms Third Edition
 int order;
@@ -42,7 +44,16 @@ struct node {
     node** child = new node * [MAX_NUM_OF_CHILDS];
 
 };
-
+int get_value_from_char(char znak[MAX_INPUT_LENGTH], int poczatek)
+{
+    int result = 0, i = 0;
+    while (znak[poczatek + i] >= 48 && znak[poczatek + i] <= 57)
+    {
+        result = result * 10 + (znak[poczatek + i] - 48);
+        i++;
+    }
+    return result;
+}
 
 class Btree {
 private:
@@ -50,22 +61,136 @@ private:
     int height = 0;
 
 public:
+    Btree() {}
+    node* getRoot() { return root; }
+    void constr() { this->root = new node; }
     void remove(int value) {
     }
-    void load() {
-
-    }
-    void save() {
-
-    }
     void cache(){}
+    void load(FILE* fptr) {
+        this->root = new node;
 
-    node* getRoot() { return root; }
-    Btree() {   }
-    void constr() {
-        root = new node;
+        bool leaf;
+
+        char chunk[128];
+        fgets(chunk, sizeof(chunk), fptr);
+
+        int h = 0;
+        node *curr = this->root;
+
+
+        int nh = 0;
+        int z = 0;
+        int maxh = 0;
+        while (chunk[z] != '\0'){
+
+            if (chunk[z] == '(') {
+                nh++;
+            }
+            if (chunk[z] == ')') {
+                nh--;
+            }
+            if (nh > maxh) maxh = nh;
+            z++;
+        }
+        cout << " fh:" << maxh << endl;
+
+
+            node** nodes = new node * [h]; //kazdy node  to inny level --> bedzie mozna wracac do poprzenich
+
+            int b = 0;
+            for (int i = 0; i < h; i++) {
+               // nodes[i] = 
+            }
+
+            int j = 0;
+            while (chunk[j] != '\0') {
+                int t = 0;
+                char act =' ';
+                int temph = 0;
+                int tempc = 0;
+                while (t < j) {
+                    act = chunk[t];
+
+                    if (act == '(') {
+                        nodes[temph] = curr;
+                        
+                        temph++;
+
+                        
+                    }
+                    if (act == ')') {
+                        temph--;
+ 
+                    }
+                    t++;
+                }
+                if (act != ' ') {
+                    cout << " c:" << act << " ";
+                    if (temph == h) leaf = true;
+                    else leaf = false;
+
+                    if (act >= 48 && act <= 57) {
+                        
+                        int val = get_value_from_char(chunk, t-1);
+                        cout << "v:" << val << endl;
+                        
+
+
+
+                        while (val > 0) {
+                            val /= 10;
+                            j++;
+                        }
+                    }
+                }
+
+                j++;
+            }
+
+
+            //for (int a = 1; a <= height; a++) {
+            //    //wpisz liczby
+            //    while (chunk[k - 1] > 48 || chunk[k - 1] < 57 || chunk[k - 1] == ' ') {
+            //        cout << chunk[k - 1];
+            //        curr->key[k] = chunk[k] - 48;
+            //        k++;
+            //    }
+            //    //cofnij sie do rodzica
+            //    while (chunk[k - 1] < 48 || chunk[k - 1] > 57) {
+            //        cout << chunk[k - 1];
+            //        if (k > 1) curr->leaf = false;
+            //        curr = root->child[k];
+            //        k++;
+            //    }
+
+            //}
+           
+
+
+
+
+
     }
+    void save(node* curr) {
+        cout << "( ";
 
+        int i;
+        for (i = 1; i <= curr->n; i++)
+        {
+            if (curr->leaf == false) 
+                print(curr->child[i]);
+
+            cout << curr->key[i] << " ";
+        }
+
+        if (curr->leaf == false) {
+            print(curr->child[i]);
+        }
+
+        cout << ") ";
+    }
+  
     bool search(node* curr, int value) {
         int i = 1;
 
@@ -112,20 +237,6 @@ public:
         parent->key[i] = y->key[order]; // srodkowy klucz z Y idzie do Parent
         parent->n += 1; //ilosc kluczy w Parent sie zwiekszyla
 
-       /* cout << endl;
-        for (int k = 1; k <= y->n; k++)
-            cout << "Y " << y->key[k] << " ";
-        cout << endl;
-
-        for (int k = 1; k <= parent->n; k++)
-            cout << "parent " << parent->key[k] << " ";
-        cout << endl;
-
-        for (int k = 1; k <= z->n; k++)
-            cout << "Z " << z->key[k] << " ";
-        cout << endl;
-
-        cout << parent->leaf << endl;*/
 
     }
 
@@ -144,7 +255,7 @@ public:
         else
             insertNonFull(root, value);
 
-        this->InOrderPrint(root);
+        this->print(root);
        
     }
 
@@ -176,48 +287,23 @@ public:
             insertNonFull(curr->child[i], value);
         }
     }
-    void insertNonFullRec(node* curr, int value) //not sure if it works
-    {
-        int i = curr->n;
-        while (curr->leaf == false) {
-            while (i >= 1 && value < curr->key[i])
-                i--;
-            i++;
-            if (curr->child[i]->n == MAX_NUM_OF_KEYS) {
-                splitChild(curr, i);
-                if (value > curr->key[i])
-                    i++;
-            }
-            insertNonFull(curr->child[i], value);
-        }
 
-        while (i >= 1 && value < curr->key[i]) {
-            curr->key[i + 1] = curr->key[i];
-            i--;
-        }
-        curr->key[i + 1] = value;
-        curr->n += 1;
+    void print(node* curr) {
 
-    }
-
-    void InOrderPrint(node* curr) {
-        cout << "( ";
         int i;
         for (i = 1; i <= curr->n; i++)
         {
             // If this is not leaf, then before printing key[i],
             // traverse the subtree rooted with child C[i].
             if (curr->leaf == false) {
-                InOrderPrint(curr->child[i]);
+                print(curr->child[i]);
             }
             cout << curr->key[i] << " ";
         }
 
-
         if (curr->leaf == false) {
-            InOrderPrint(curr->child[i]);
+            print(curr->child[i]);
         }
-        cout << ") ";
 
     }
 
@@ -228,7 +314,7 @@ public:
 
 void insertandprint(int value, Btree* b) {
     b->insert(value);
-    b->InOrderPrint(b->getRoot());
+    b->print(b->getRoot());
     cout << endl;
 }
 
